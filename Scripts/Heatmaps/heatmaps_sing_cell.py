@@ -55,7 +55,7 @@ for col in args.colnames:
     cyto=stain+"_cyto"
     diff=stain+"_nc_diff"
     diff_ratio=stain+"_nc_diff_ratio"
-    Path(path_out_im+"").mkdir(parents=True, exist_ok=True)
+    #Path(path_out_im+"").mkdir(parents=True, exist_ok=True)
     stains.append(col)
     stains.append(ratio)
     stains.append(nuc)
@@ -102,18 +102,63 @@ labels_d = range(1, n_bins_d)
 
 feat_filt['dist_bin'] = pd.to_numeric(pd.cut(x = feat_filt['dist_out'], bins = dist_bins, labels = labels_d, include_lowest = True, right=False))
 
+t_max=np.max(feat_filt.theta_bin)
 
+theta_bins=theta_bins[:t_max]
 theta_labs=360*theta_bins/(2*math.pi)
-theta_labs=theta_labs[:t_max]
+theta_labs=theta_labs#[:t_max]
 phi_labs=360*phi_bins/(2*math.pi)
-phi_labs=phi_labs[:-1]
+phi_labs=phi_labs
+
 
 stains=stains+["r_neigh", "r_neigh_mean"]
+
+
 for stain in stains:
+    stain_bins=np.linspace(0, np.max(feat_filt[stain]), 20)
     c=stain.split("_")
     stain_clean="_".join(["".join(c[0].split("/"))]+c[1:])
+    
+    
     #Phi Theta heatmaps
     
+    """
+    stain_ang_1=feat_filt.loc[feat_filt.dist_bin_ang==1]
+    stain_ang_2=feat_filt.loc[feat_filt.dist_bin_ang==2]
+    stain_ang_3=feat_filt.loc[feat_filt.dist_bin_ang==3]
+    vmin=feat_filt[stain].quantile(0.05)
+    vmax=feat_filt[stain].quantile(0.95)
+    
+    f,(ax1,ax2,ax3) = plt.subplots(1,3,sharey=True, gridspec_kw={'width_ratios': [1, 1, 1.25]})
+    #sns.set(font_scale=0.75)
+    #sns.set_style("white",  {'figure.facecolor': 'white'})
+    plt.subplots_adjust(hspace=0.5)
+
+    ax1.scatter(x=stain_ang_1.theta, y=stain_ang_1.new_phi, c=stain_ang_1[stain], marker="o", s=8, vmin=vmin, vmax=vmax, cmap="jet")
+    #ax1=plt.gca()
+    ax1.set_ylabel("phi")
+    ax1.set_xlabel("theta")
+    ax1.set_title("EVL")
+    
+
+    ax2.scatter(stain_ang_2.theta, stain_ang_2.new_phi, c=stain_ang_2[stain], marker="o", s=8, vmin=vmin, vmax=vmax, cmap="jet")
+    #ax2=plt.gca()
+    #g2.set_ylabel("phi")
+    ax2.set_xlabel("theta")
+    ax2.set_title("Middle")
+    
+
+    ax=ax3.scatter(stain_ang_3.theta, stain_ang_3.new_phi, c=stain_ang_3[stain], marker="o", s=8, vmin=vmin, vmax=vmax, cmap="jet")
+    #ax3=plt.gca()
+    f.colorbar(ax, ax=ax3, label=stain+" intensity")
+    #g3.set_ylabel("phi")
+    ax3.set_xlabel("theta")
+    ax3.set_title("YSL")
+    f.savefig(path_out_im+im+"_"+stain_clean+"_dist_phi_theta_sing_cell.png", bbox_inches='tight', dpi=300)
+    plt.close(f)
+    """
+    
+    """
     means_dist_phi_theta=feat_filt.groupby(['dist_bin_ang', 'phi_bin', 'theta_bin'])[stain].mean()
     
     heatmap_dist_phi_theta=[np.full([n_bins, np.max(feat_filt.theta_bin)], np.nan), np.full([n_bins, np.max(feat_filt.theta_bin)], np.nan), np.full([n_bins, np.max(feat_filt.theta_bin)], np.nan)]
@@ -147,118 +192,75 @@ for stain in stains:
     g3.set_title("YSL")
     f.savefig(path_out_im+im+"_"+stain_clean+"_dist_phi_theta.png", bbox_inches='tight', dpi=300)
     plt.close(f)
-    
-    
-    
-    means_phi_theta=feat_filt.groupby(['phi_bin_new', 'theta_bin'])[stain].mean()
-    
-    heatmap_phi_theta=np.full([n_bins, np.max(feat_filt.theta_bin)], np.nan)
-    
-    for idx in means_phi_theta.index:
-        idx_phi=idx[0]
-        idx_theta=idx[1]
-        heatmap_phi_theta[idx_phi-1, idx_theta-1]=means_phi_theta.loc[(idx_phi,idx_theta)]
-    
-    
+    """
     
    
     fig0=plt.figure(0)
     plt.clf()
     vmin=feat_filt[stain].quantile(0.05)
     vmax=feat_filt[stain].quantile(0.95)
-    ax=plt.scatter(feat_filt.theta, feat_filt.new_phi, c=feat_filt[stain], marker=".", vmin=vmin, vmax=vmax, cmap="turbo")
-    plt.colorbar(ax)
+    ax=plt.scatter(feat_filt.theta, feat_filt.new_phi, c=feat_filt[stain], marker="o", s=8, vmin=vmin, vmax=vmax, cmap="jet")
+    plt.colorbar(ax, label=stain+" intensity")
     plt.xlabel("theta")
     plt.ylabel("phi")
+    plt.xticks(theta_bins, np.around(theta_labs, 2))
+    plt.yticks(phi_bins, np.around(phi_labs, 2))
     fig0.savefig(path_out_im+im+"_"+stain_clean+"_phi_new_theta_sing_cell.png", bbox_inches='tight', dpi=300)
     plt.close(fig0)
-    """
-    vmin=feat_filt[stain].quantile(0.05)
-    vmax=feat_filt[stain].quantile(0.95)
-    heatmap_phi_theta=feat_filt.pivot(index='new_phi', columns='theta', values=stain)
-    ax = sns.heatmap(heatmap_phi_theta, linewidth=0.5, xticklabels=np.around(theta_labs, 2), yticklabels=np.around(phi_labs, 2),vmin=vmin, vmax=vmax, cmap=sns.mpl_palette("turbo", 256)) 
-    ax.collections[0].colorbar.set_label(stain+" intensity")
-    plt.xlabel("theta")
-    plt.ylabel("phi")
-    fig1.savefig(path_out_im+im+"_"+stain_clean+"_phi_new_theta_sing_cell.png", bbox_inches='tight', dpi=300)
-    plt.close(fig1)
-    """
+
     
-    means_phi_theta=feat_filt.groupby(['phi_bin_cur', 'theta_bin'])[stain].mean()
     
-    heatmap_phi_theta=np.full([n_bins, np.max(feat_filt.theta_bin)], np.nan)
-    
-    for idx in means_phi_theta.index:
-        idx_phi=idx[0]
-        idx_theta=idx[1]
-        heatmap_phi_theta[idx_phi-1, idx_theta-1]=means_phi_theta.loc[(idx_phi,idx_theta)]
-        
-    fig1=plt.figure()
-    plt.clf()
-    vmin=feat_filt[stain].quantile(0.05)
-    vmax=feat_filt[stain].quantile(0.95)
-    ax = sns.heatmap(heatmap_phi_theta, linewidth=0.5, xticklabels=np.around(theta_labs, 2), yticklabels=np.around(phi_labs, 2),vmin=vmin, vmax=vmax, cmap=sns.mpl_palette("turbo", 256)) 
-    ax.collections[0].colorbar.set_label(stain+" intensity")
-    plt.xlabel("theta")
-    plt.ylabel("phi")
-    fig1.savefig(path_out_im+im+"_"+stain_clean+"_phi_cur_theta.png", bbox_inches='tight', dpi=300)
-    plt.close(fig1)
     #Distance-phi heatmap
-    means_dist_phi=feat_filt.groupby(['dist_bin', 'phi_bin'])[stain].mean()
     
-    heatmap_dist_phi=np.full([n_bins_d, n_bins], np.nan)
-    
-    for idx in means_dist_phi.index:
-        idx_dist=idx[0]
-        idx_phi=idx[1]
-        heatmap_dist_phi[idx_dist-1, idx_phi-1]=means_dist_phi.loc[(idx_dist, idx_phi)]
-        
-    fig2=plt.figure()
+    fig1=plt.figure(1)
     plt.clf()
-    ax = sns.heatmap(heatmap_dist_phi, linewidth=0.5, xticklabels=np.around(phi_labs , 2), yticklabels=np.around(dist_bins[:-1], 2), cmap=sns.mpl_palette("turbo", 256)) 
-    ax.collections[0].colorbar.set_label(stain+" intensity")
+    vmin=feat_filt[stain].quantile(0.05)
+    vmax=feat_filt[stain].quantile(0.95)
+    ax=plt.scatter(feat_filt.new_phi, feat_filt.dist_out, c=feat_filt[stain], marker="o", s=8, vmin=vmin, vmax=vmax, cmap="jet")
+    plt.colorbar(ax, label=stain+" intensity")
     plt.xlabel("phi")
     plt.ylabel("dist")
-    fig2.savefig(path_out_im+im+"_"+stain_clean+"_dist_phi.png", bbox_inches='tight', dpi=300)
-    plt.close(fig2)
+    plt.xticks(phi_bins, np.around(phi_labs, 2))
+    plt.yticks(dist_bins, np.around(dist_bins, 2))
+    fig1.savefig(path_out_im+im+"_"+stain_clean+"_phi_new_dist_sing_cell.png", bbox_inches='tight', dpi=300)
+    plt.close(fig1)
     
     #Distance-theta heatmap
-    means_dist_theta=feat_filt.groupby(['dist_bin', 'theta_bin'])[stain].mean()
-    
-    heatmap_dist_theta=np.full([n_bins_d, np.max(feat_filt.theta_bin)], np.nan)
-    
-    for idx in means_dist_theta.index:
-        idx_dist=idx[0]
-        idx_theta=idx[1]
-        heatmap_dist_theta[idx_dist-1, idx_theta-1]=means_dist_theta.loc[(idx_dist, idx_theta)]
-    
-    fig3=plt.figure()
+    fig2=plt.figure(2)
     plt.clf()
-    ax = sns.heatmap(heatmap_dist_theta, linewidth=0.5, xticklabels=np.around(theta_labs , 2), yticklabels=np.around(dist_bins[:-1], 2), cmap=sns.mpl_palette("turbo", 256)) 
-    ax.collections[0].colorbar.set_label(stain+" intensity")
+    vmin=feat_filt[stain].quantile(0.05)
+    vmax=feat_filt[stain].quantile(0.95)
+    ax=plt.scatter(feat_filt.theta, feat_filt.dist_out, c=feat_filt[stain], marker="o", s=8, vmin=vmin, vmax=vmax, cmap="jet")
+    plt.colorbar(ax, label=stain+" intensity")
     plt.xlabel("theta")
     plt.ylabel("dist")
-    fig3.savefig(path_out_im+im+"_"+stain_clean+"_dist_theta.png", bbox_inches='tight', dpi=300)
-    plt.close(fig3)
+    plt.xticks(theta_bins, np.around(theta_labs, 2))
+    plt.yticks(dist_bins, np.around(dist_bins, 2))
+    fig2.savefig(path_out_im+im+"_"+stain_clean+"_theta_dist_sing_cell.png", bbox_inches='tight', dpi=300)
+    plt.close(fig2)
     
-    means_ov_phi=feat_filt.groupby(['phi_bin'])[stain].mean()
+    #means_ov_phi=feat_filt.groupby(['phi_bin'])[stain].mean()
 
-    fig4=plt.figure()
+    fig4=plt.figure(4)
     plt.clf()
-    plt.plot(phi_labs, means_ov_phi)
+    plt.plot(feat_filt.new_phi, feat_filt[stain])
     plt.xlabel("phi")
     plt.ylabel(stain)
-    fig4.savefig(path_out_im+im+"_"+stain_clean+"_means_ov_phi.png", bbox_inches='tight', dpi=300)
+    plt.xticks(phi_bins, np.around(phi_labs, 2))
+    plt.yticks(stain_bins, np.around(stain_bins, 2))
+    fig4.savefig(path_out_im+im+"_"+stain_clean+"_val_ov_phi_sing_cell.png", bbox_inches='tight', dpi=300)
     plt.close(fig4)
 
     means_ov_theta=feat_filt.groupby(['theta_bin'])[stain].mean()
 
-    fig5=plt.figure()
+    fig5=plt.figure(5)
     plt.clf()
-    plt.plot(theta_labs, means_ov_theta)
+    plt.plot(feat_filt.theta, feat_filt[stain])
     plt.xlabel("theta")
     plt.ylabel(stain)
-    fig5.savefig(path_out_im+im+"_"+stain_clean+"_means_ov_theta.png", bbox_inches='tight', dpi=300)
+    plt.xticks(theta_bins, np.around(theta_labs, 2))
+    plt.yticks(stain_bins, np.around(stain_bins, 2))
+    fig5.savefig(path_out_im+im+"_"+stain_clean+"_val_ov_theta_sing_cell.png", bbox_inches='tight', dpi=300)
     plt.close(fig5)
 
 
