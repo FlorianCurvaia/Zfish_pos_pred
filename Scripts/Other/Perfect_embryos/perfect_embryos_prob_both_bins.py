@@ -183,7 +183,7 @@ for w in wells:
 
 """       
 index=list(product(range(1, n_bins_per_ax+1), range(1, n_bins_per_ax+1)))
-stains=["low_dorsal_margin", "high_ventral_margin", "high_margin", "uniform"]
+stains=["low_dorsal_margin", "high_ventral_margin", "high_margin"] #, "uniform"
 for f in fld.glob("*.csv"):
     name=f.name.split(".")[0]
     emb=name.split("_")[2]
