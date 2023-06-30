@@ -43,8 +43,8 @@ def neigh_med(adj_mat, stain):
     neigh_val=adj_mat*stain
     for i in numba.prange(adj_mat.shape[1]):
         a=neigh_val[i]
-        neighbours_median[i]=np.median(a[np.nonzero(a)])
-        #neighbours_median[i]=np.mean(a[np.nonzero(a)])
+        #neighbours_median[i]=np.median(a[np.nonzero(a)])
+        neighbours_median[i]=np.mean(a[np.nonzero(a)])
         
     return neighbours_median
 
@@ -106,9 +106,9 @@ path_in_adj="/data/homes/fcurvaia/Spheres_fit/"
 #path_in="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/work/fcurvaia/distances/Perfect_embryos/"
 #path_out_im="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/Images/Perfect_embryos/Posterior/Both_bins/" 
 
-#stain='pSmad1/5_nc_ratio' #, 'pSmad2/3_nc_ratio'
+stain='pSmad1/5_nc_ratio' #, 'pSmad2/3_nc_ratio'
 #stain='betaCatenin_nuc'
-stain='MapK_nc_ratio'
+#stain='MapK_nc_ratio'
 stain_pred=stain+"_neigh"
 c=stain.split("_")
 stain_clean="_".join(["".join(c[0].split("/"))]+c[1:])
@@ -151,8 +151,8 @@ fld=Path(path_in)
 files=[]
 all_df=[]
 
-to_remove=['D06_px+1741_py-0131', 'D06_px-1055_py-0118', 'B07_px+1257_py-0474', 'C07_px+1929_py-0176', "B07_px-0202_py+0631", "C07_px+0243_py-1998"]
-#to_remove=["B07_px-0202_py+0631", "C07_px+0243_py-1998"]
+#to_remove=['D06_px+1741_py-0131', 'D06_px-1055_py-0118', 'B07_px+1257_py-0474', 'C07_px+1929_py-0176', "B07_px-0202_py+0631", "C07_px+0243_py-1998"]
+to_remove=["B07_px-0202_py+0631", "C07_px+0243_py-1998"]
 
 index=list(product(range(1, n_bins_per_ax+1), range(1, n_bins_per_ax+1)))
 
@@ -339,7 +339,7 @@ for embryo in emb_list:
     #ax.set_yticks(bins_phi_ticks, list(range(1, n_bins))[:len(bins_phi_ticks)])
     ax.set_yticks(bins_coord_ticks, index)  #
     ax.set_xticks(list(range(0, n_bins)), index, rotation=90)
-    ax.set_xlabel("Posterior distribution")
+    ax.set_xlabel("Predicted bin")
     ax.set_ylabel("True bin")
     fig.colorbar(posterior_plot, ax=ax, label="Posterior probability")
     #ax.grid(which='minor', color='w', linestyle='-', linewidth=10)
@@ -359,7 +359,7 @@ coord_plot=ax.imshow(mean_all_preds, aspect="auto", cmap="inferno")
 ax.set_yticks(list(range(0, n_bins)), index)
 #ax.set_yticks(list(range(0, n_bins-1)), list(range(1, n_bins)))
 ax.set_xticks(list(range(0, n_bins)), index, rotation=90)
-ax.set_xlabel("Posterior distribution")
+ax.set_xlabel("Predicted bin")
 ax.set_ylabel("True bin")
 fig.colorbar(coord_plot, ax=ax, label="Mean posterior probability")
 #ax.grid(which='minor', color='w', linestyle='-', linewidth=10)

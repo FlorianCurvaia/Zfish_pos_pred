@@ -19,12 +19,12 @@ from sklearn.model_selection import train_test_split
 from itertools import product
 
 
-
+plt.rcParams.update({'font.size': 7.5})
 
 path_in="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/work/fcurvaia/distances_new/"
 path_in="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/Script/df/"
 path_out_im="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/Images/Fate_markers/"
-sns.set(style="ticks", font_scale=0.5)
+#sns.set(style="ticks", font_scale=0.5)
 n_bins=9
 
 labels = range(1, n_bins)
@@ -58,25 +58,35 @@ for fm in data_df.columns:
     arr_=np.reshape(np.array(data_df[fm])[::-1], (8,8)).T[::-1, :].T
     fm_insitu[fm]=arr_
     
+
     
-    
-    
-fig, axs=plt.subplots(3,2, figsize=(10, 10))
+fig, axs=plt.subplots(2, 3, figsize=(12, 7.24), sharex=True, sharey=True, subplot_kw={'projection': 'polar'})
 fig.set_dpi(300)
-fig.subplots_adjust(hspace=0.2)
+fig.subplots_adjust(hspace=0.025)
 fig.subplots_adjust(wspace=0.15)
 
-for mark, ax_ in zip(list(fm_insitu.keys()),axs.flatten()):
-    
-    ax=sns.heatmap(fm_insitu[mark], linewidth=0.1, cmap=sns.mpl_palette("viridis", 1000), cbar=True, ax=ax_) #xticklabels=theta_labels, yticklabels=phi_labels,
+for mark, ax in zip(list(fm_insitu.keys()),axs.flatten()):
+    ax_0=ax.pcolormesh(phi_bins_abs, theta_bins, fm_insitu[mark].T, cmap="viridis", edgecolors='face', vmin=0, vmax=1)
+    ax.pcolormesh(-1*phi_bins_abs, theta_bins, fm_insitu[mark].T, cmap="viridis", edgecolors='face', vmin=0, vmax=1)
+    #ax=sns.heatmap(fm_insitu[mark], linewidth=0.1, cmap=sns.mpl_palette("viridis", 1000), cbar=True, ax=ax_) #xticklabels=theta_labels, yticklabels=phi_labels,
     #ax.set_xticks(labels, labels)
     #ax.set_yticks(labels, np.around(phi_labs_abs, 2))
-    ax.collections[0].colorbar.set_label("$\it{"+mark.lower()+"}$"+" intensity")
-    ax_.set_xlabel("theta bin")
-    ax_.set_ylabel("phi bin")
-    ax_.set_xticks(np.array(labels)-0.5, labels, rotation=0)
+    #ax.collections[0].colorbar.set_label("$\it{"+mark.lower()+"}$"+" intensity")
+    #ax_.grid(linewidth=0.5)
+    #ax.grid(True)
+    ax.grid(linewidth=0.5)
+    ax.tick_params(pad=0)
+    ax.set_rlabel_position(90)
+    ax.set_yticks(theta_bins, theta_bins)
+    ax.set_xticks(np.pi/180. * np.linspace(180,  -180, 8, endpoint=False))
+    ax.set_thetalim(-np.pi, np.pi)
+    #ax.set_yticklabels(ax.get_yticklabels(), weight='bold')
+    #ax_.set_yticks(np.linspace(0,1,6, endpoint=True), np.linspace(0,1,6, endpoint=True))
+    #ax_.set_xlabel("theta bin")
+    #ax_.set_ylabel("phi bin")
+    #ax_.set_xticks(np.array(labels)-0.5, labels, rotation=0)
+    fig.colorbar(ax_0, ax=ax, label="$\it{"+mark.lower()+"}$"+" intensity", pad=0.1, shrink=.75)
     
-
 fig.savefig(path_out_im+"Fate_markers_heatmap.png", bbox_inches='tight', dpi=300)
 plt.close(fig)
 
@@ -94,7 +104,7 @@ for mark, expr in fm_insitu.items():
     feat_filt[mark]=feat_filt[mark].factorize()[0]
     #feat_filt[mark]=feat_filt[mark].astype("category")
 
-
+"""
 to_pred=list(fm_insitu.keys())
 
 
@@ -136,21 +146,18 @@ for s in range(l):
         length=np.argmax(cum_sum>2/3)
         all_lengths.append(length)
     
-    """
+
     fig, ax=plt.subplot()
     plt.clf()
     ax.plot(bins_tog[s], all_lengths)
     ax.set_xlabel(col)
     ax.set_ylabel("N bins")
     ax.set_title(im)
-    """
-    
-    
-    """
+
     disp = ConfusionMatrixDisplay.from_predictions(x_plot, y_plot, cmap="turbo", normalize="true")
     disp.plot(ax=ax_conf)
     disp.ax_.set_title(im)
-    """
+
     fig, ax=plt.subplots()
     sns.heatmap(conf_mat, cmap="turbo", annot=False, ax=ax, xticklabels=list(product(range(1, 9), range(1,9))), yticklabels=list(product(range(1, 9), range(1,9))))
     ax.set_title(im+" "+str(col))
@@ -159,7 +166,7 @@ for s in range(l):
     fig.savefig(path_out_im+str(col)+"_random_forest.png", bbox_inches='tight', dpi=300)
     plt.close()
 
-
+"""
 
 
 

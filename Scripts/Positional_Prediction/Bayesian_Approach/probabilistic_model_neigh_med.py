@@ -40,6 +40,8 @@ import matplotlib
 
 import seaborn as sns
 
+import matplotlib.colors as colors
+
 matplotlib.rc('xtick', labelsize=5) 
 matplotlib.rc('ytick', labelsize=5) 
 
@@ -120,6 +122,7 @@ path_in="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/work/fcurvaia/dist
 #path_in="/data/homes/fcurvaia/distances_new/"
 
 path_out_im="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/work/fcurvaia/Images/Posterior/Neighbours/"
+#path_out_im="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/work/fcurvaia/Images/Posterior/Neighbours/Without/"
 #path_in="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/Script/df/"
 #path_out_im="/data/homes/fcurvaia/Images/Posterior/Neighbours/"
 
@@ -127,6 +130,11 @@ path_out_im="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/work/fcurvaia/
 path_in_adj="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/work/fcurvaia/Spheres_fit/"
 
 stains=['MapK_nc_ratio', 'betaCatenin_nuc', 'pSmad1/5_nc_ratio'] #, 'pSmad2/3_nc_ratio' , 'betaCatenin_nuc', 'pSmad1/5_nc_ratio', 'MapK_nc_ratio',
+#stains=['MapK_nc_ratio', 'betaCatenin_nuc']
+#stains=['MapK_nc_ratio', 'pSmad1/5_nc_ratio']
+#stains=['betaCatenin_nuc', 'pSmad1/5_nc_ratio']
+
+
 #wells=["D05", "B06", "C06"] + ["B08", "C08", "D08"] +["D06", "B07", "C07", "D07"]
 #wells=["B08", "C08", "D08"] +["D06", "B07", "C07", "D07"]
 wells=["D06", "B07", "C07", "D07"] #6 hpf
@@ -328,6 +336,8 @@ def gen_profiles(emb, feat_filt_all, n_bins, stains):
 
 filt=stains_pred+["both_bins"]
 
+MAP=False
+
 for embryo in emb_list:
     start_time_0=time.time()
     feat_filt=feat_filt_all.loc[feat_filt_all.emb==embryo][filt]
@@ -365,8 +375,9 @@ for embryo in emb_list:
     
     to_df=posterior_coord.copy()
     
-    #to_df=np.zeros_like(posterior_coord)
-    #to_df[np.arange(len(posterior_coord)), posterior_coord.argmax(1)] = 1
+    if MAP==True:
+        to_df=np.zeros_like(posterior_coord)
+        to_df[np.arange(len(posterior_coord)), posterior_coord.argmax(1)] = 1
     
     
     #to_df.resize((n_bins,n_bins), refcheck=False)
@@ -377,12 +388,12 @@ for embryo in emb_list:
     
 
     fig, ax=plt.subplots()
-    posterior_plot=ax.imshow(posterior_coord, aspect="auto", cmap="inferno")
+    posterior_plot=ax.imshow(to_df, aspect="auto", cmap="inferno")
     #posterior_plot=ax.imshow(to_df, aspect="auto", cmap="inferno")
     #ax.set_yticks(bins_phi_ticks, list(range(1, n_bins))[:len(bins_phi_ticks)])
     ax.set_yticks(bins_coord_ticks, index)  #
     ax.set_xticks(list(range(0, n_bins)), index, rotation=90) #
-    ax.set_xlabel("Posterior distribution")
+    ax.set_xlabel("Predicted bin")
     ax.set_ylabel("True bin")
     fig.colorbar(posterior_plot, ax=ax, label="Posterior probability")
     ax.set_box_aspect(1)
@@ -396,12 +407,12 @@ for embryo in emb_list:
 #mean_all_preds=np.nanmean(np.array(mean_all_preds), axis=0)
 mean_all_preds=pd.concat(all_preds).groupby("both_bins")[labels].mean().to_numpy()
 
-fig, ax=plt.subplots()
-coord_plot=ax.imshow(mean_all_preds, aspect="auto", cmap="inferno")
+fig, ax=plt.subplots() #figsize=(10,10)
+coord_plot=ax.imshow(mean_all_preds, aspect="auto", cmap="inferno", vmax=0.3) #
 ax.set_yticks(list(range(0, n_bins)), index)
 #ax.set_yticks(list(range(0, n_bins-1)), list(range(1, n_bins)))
 ax.set_xticks(list(range(0, n_bins)), index, rotation=90)
-ax.set_xlabel("Posterior distribution")
+ax.set_xlabel("Predicted bin")
 ax.set_ylabel("True bin")
 fig.colorbar(coord_plot, ax=ax, label="Mean posterior probability")
 ax.set_box_aspect(1)
