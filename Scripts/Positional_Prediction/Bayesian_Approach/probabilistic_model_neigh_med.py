@@ -6,13 +6,6 @@ Created on Tue May 30 10:57:14 2023
 @author: floriancurvaia
 """
 
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue May 16 14:51:37 2023
-
-@author: floriancurvaia
-"""
 
 from pathlib import Path
 
@@ -77,7 +70,7 @@ def chi_g_x(measures, cov_mat, means):
 def P_all_g_given_x(measures, x, all_cov_mat, all_means):
     K=len(measures)
     cov_mat=all_cov_mat[x-1]
-    means=all_means[:,x-1]
+    means=all_means[:, x-1]
     det=np.linalg.det(cov_mat)
     chi_2=chi_g_x(measures, cov_mat, means)
     denominator=math.sqrt((2*math.pi)**K * det)
@@ -120,11 +113,13 @@ def all_posteriors_emb(all_measures, n_bins, all_cov_mat, all_means, P_x):
 
 path_in="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/work/fcurvaia/distances_new/" #"/data/homes/fcurvaia/distances/"
 #path_in="/data/homes/fcurvaia/distances_new/"
+#path_in="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/work/fcurvaia/distances_new/"
 
 path_out_im="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/work/fcurvaia/Images/Posterior/Neighbours/"
 #path_out_im="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/work/fcurvaia/Images/Posterior/Neighbours/Without/"
 #path_in="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/Script/df/"
 #path_out_im="/data/homes/fcurvaia/Images/Posterior/Neighbours/"
+#path_out_im="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/Images/Posterior/Both_bins/Neighbours/"
 
 #path_in_adj="/data/homes/fcurvaia/Spheres_fit/"
 path_in_adj="/Users/floriancurvaia/Desktop/Uni/ETH/Labos/Pelkmans/work/fcurvaia/Spheres_fit/"
@@ -165,9 +160,32 @@ phi_labs_abs=phi_labs_abs[:-1]
 fld=Path(path_in)
 files=[]
 all_df=[]
-#to_remove=['D06_px+1741_py-0131', 'D06_px-1055_py-0118', 'B07_px+1257_py-0474', 'C07_px+1929_py-0176', "B07_px-0202_py+0631", "C07_px+0243_py-1998", "D06_px-1055_py-0118"]
-to_remove=["B07_px-0202_py+0631", "C07_px+0243_py-1998"]
+to_remove_more=['D06_px+1741_py-0131', 'D06_px-1055_py-0118', 'B07_px+1257_py-0474', 'C07_px+1929_py-0176', "D06_px-1055_py-0118"]
+to_remove=['C02_px-0797_py+0598',
+ 'B02_px-2204_py+0773',
+ 'C02_px+1838_py+0540',
+ 'B03_px-1274_py+0062',
+ 'C03_px+1541_py-0312',
+ 'D03_px-0596_py-1772',
+ 'B04_px-0190_py+2329',
+ 'B04_px-2301_py-0402',
+ 'C04_px+0882_py-1616',
+ 'D04_px-0512_py-1849',
+ 'D04_px-1326_py+1186',
+ 'D04_px+0320_py+0431',
+ 'D04_px+1315_py+1425',
+ 'C05_px+0656_py-1139',
+ 'B05_px-0648_py+0837',
+ 'B05_px+1541_py+1373',
+ 'D05_px+1761_py-1171',
+ 'C07_px+0243_py-1998',
+ 'B07_px-0202_py+0631',
+ 'B08_px-0771_py+0185']
 
+#to_remove=to_remove+to_remove_more
+#Add B08_px+1160_py-1616 ?
+
+n_neighbours=1 #Smoothening parameter
 
 index=list(product(range(1, n_bins_per_ax+1), range(1, n_bins_per_ax+1)))
 stains_pred=[]
@@ -196,8 +214,14 @@ for w in wells:
                     #feat_filt[stain]=zscore(feat_filt[stain])
                 filt_ids={}
                 for stain, stain_pred in zip(stains, stains_pred):
-                    stain_neigh=neigh_med(adj_mat, feat_filt[stain].to_numpy()) #Make dictionnary
-                    feat_filt[stain_pred]=stain_neigh
+                    feat_filt[stain_pred]=feat_filt[stain]
+                    
+                for i in range(n_neighbours):
+                    for stain_pred in stains_pred:
+                        stain_neigh=neigh_med(adj_mat, feat_filt[stain_pred].to_numpy()) #Make dictionnary
+                        feat_filt[stain_pred]=stain_neigh
+                    
+                for stain_pred in stains_pred:
                     y_max=feat_filt[stain_pred].quantile(1)
                     y_min=feat_filt[stain_pred].quantile(0)
                     filt_ids[stain_pred]=set(feat_filt.loc[(feat_filt[stain_pred]<=y_max) & (feat_filt[stain_pred]>=y_min)].index.to_list())
@@ -238,7 +262,10 @@ for w in wells:
 
 
 feat_filt_all=pd.concat(all_df, ignore_index=True)
-
+"""
+for stain_pred in stains_pred:
+    feat_filt_all[stain_pred]=zscore(feat_filt_all[stain_pred])
+"""
 """
 filt_ids={}
 for stain_pred in stains_pred:
@@ -260,8 +287,6 @@ for stain_pred in stains_pred:
 #plt.hist(feat_filt_all.both_bins, bins=n_bins)
 emb_list=np.unique(feat_filt_all.emb)
 
-
-all_preds=[]
 
 def gen_profiles(emb, feat_filt_all, n_bins, stains):
 
@@ -289,8 +314,8 @@ def gen_profiles(emb, feat_filt_all, n_bins, stains):
             for i in range(1, n_bins+1):
                 if i not in np.unique(feat_filt.both_bins):
                     missing_bins.append(i)
-            for i in sorted(missing_bins, reverse=True):
-                all_coord_numpy=np.insert(all_coord_numpy, i, 0)
+            for i in sorted(missing_bins): #, reverse=True
+                all_coord_numpy=np.insert(all_coord_numpy, i, 0) #+missing_bins.index(i)
             #all_coord_numpy.resize((n_bins), refcheck=False)
             all_means_all_coord[e]=all_coord_numpy
             
@@ -302,7 +327,7 @@ def gen_profiles(emb, feat_filt_all, n_bins, stains):
         means_all_coord=np.true_divide(all_means_all_coord.sum(0),(all_means_all_coord!=0).sum(0))
 
         
-        i_min_coord= np.nanmin(means_all_coord[np.nonzero(means_all_coord)])
+        i_min_coord=np.nanmin(means_all_coord[np.nonzero(means_all_coord)])
         i_max_coord=np.nanmax(means_all_coord[np.nonzero(means_all_coord)])
         
         i_mins_coord.append(i_min_coord)
@@ -317,26 +342,29 @@ def gen_profiles(emb, feat_filt_all, n_bins, stains):
         mean_profiles_coord[s]=means_all_coord
 
         
-    
+
     to_cov_coord={coo_bin:np.zeros((len(stains), len(im_diff))) for coo_bin in range(1, n_bins+1)}
     #to_cov_coord={}
-
+    
     
     for pos_bin in range(1, n_bins+1):
         for s in range(len(stains)):
             stain=stains[s]
             to_cov_coord[pos_bin][s]=profiles_coord[stain].T[pos_bin-1]
+            #to_cov_coord[pos_bin][s]=profiles_coord[stain][pos_bin-1]
             #to_cov_coord[pos_bin]=feat_filt_train.loc[feat_filt_train.both_bins==pos_bin][stains].to_numpy().T
-    
+      
+    #to_cov_coord={coo_bin:feat_filt_train.loc[feat_filt_train.both_bins==coo_bin, stains].to_numpy() for coo_bin in range(1, n_bins+1)}
     cov_coord={coo_bin:np.cov(mat, bias=True) for coo_bin, mat in to_cov_coord.items()}
+    #cov_coord={coo_bin:MinCovDet(random_state=42).fit(mat.T).raw_covariance_ for coo_bin, mat in to_cov_coord.items()} #assume_centered=True,
 
     return(mean_profiles_coord, cov_coord, i_mins_coord, i_maxs_coord)
-    
-    
 
 filt=stains_pred+["both_bins"]
 
 MAP=False
+
+all_preds=[]
 
 for embryo in emb_list:
     start_time_0=time.time()
@@ -345,6 +373,8 @@ for embryo in emb_list:
     feat_filt=feat_filt.sort_values(["both_bins"])
     
     mean_profiles_coord, cov_coord, i_mins_coord, i_maxs_coord = gen_profiles(embryo, feat_filt_all, n_bins, stains_pred)
+    
+    #mean_profiles_coord, cov_coord = gen_mean_cov_mat(embryo, feat_filt_all, n_bins, stains_pred)
 
     P_x_coord=np.histogram(feat_filt.both_bins, bins=n_bins, range=(1, n_bins+1))[0]/len(feat_filt)
     #P_x_coord=np.array((n_bins)*[1/(n_bins)])
@@ -368,7 +398,7 @@ for embryo in emb_list:
     i_mins_coord=np.array(i_mins_coord)
     i_maxs_coord=np.array(i_maxs_coord)
     measures_coord=(measures_coord-i_mins_coord)/(i_maxs_coord-i_mins_coord)
-    posterior_coord=all_posteriors_emb(measures_coord, n_bins, list(cov_coord.values()), mean_profiles_coord, P_x_coord)
+    posterior_coord=all_posteriors_emb(measures_coord, n_bins, list(cov_coord.values()), mean_profiles_coord, P_x_coord) #list(cov_coord.values())
         
     for i in to_rm_bins:
         posterior_coord[i-1, :]=np.nan
@@ -378,20 +408,30 @@ for embryo in emb_list:
     if MAP==True:
         to_df=np.zeros_like(posterior_coord)
         to_df[np.arange(len(posterior_coord)), posterior_coord.argmax(1)] = 1
+        preds_t=pd.DataFrame(to_df, columns=labels)
+        preds_t["both_bins"]=feat_filt.both_bins.to_numpy()
+        all_preds.append(preds_t)
+
+        
+        #all_preds.append(to_df)
+        
     
     
     #to_df.resize((n_bins,n_bins), refcheck=False)
-
-    preds_t=pd.DataFrame(to_df, columns=labels)
-    preds_t["both_bins"]=feat_filt.both_bins.to_numpy()
-    all_preds.append(preds_t)
+    else:
+        preds_t=pd.DataFrame(to_df, columns=labels)
+        preds_t["both_bins"]=feat_filt.both_bins.to_numpy()
+        all_preds.append(preds_t)
     
 
     fig, ax=plt.subplots()
     posterior_plot=ax.imshow(to_df, aspect="auto", cmap="inferno")
     #posterior_plot=ax.imshow(to_df, aspect="auto", cmap="inferno")
     #ax.set_yticks(bins_phi_ticks, list(range(1, n_bins))[:len(bins_phi_ticks)])
-    ax.set_yticks(bins_coord_ticks, index)  #
+    if MAP==True:
+        ax.set_yticks(list(range(0, n_bins)), index)
+    else:
+        ax.set_yticks(bins_coord_ticks, index)  #
     ax.set_xticks(list(range(0, n_bins)), index, rotation=90) #
     ax.set_xlabel("Predicted bin")
     ax.set_ylabel("True bin")
@@ -405,10 +445,12 @@ for embryo in emb_list:
 
 #mean_all_preds=[p.groupby("both_bins")[labels].mean().to_numpy() for p in all_preds]
 #mean_all_preds=np.nanmean(np.array(mean_all_preds), axis=0)
-mean_all_preds=pd.concat(all_preds).groupby("both_bins")[labels].mean().to_numpy()
+mean_all_preds=pd.concat(all_preds, ignore_index=True).groupby("both_bins")[labels].mean().to_numpy()
+#mean_all_preds=sum(all_preds)/len(all_preds)
 
 fig, ax=plt.subplots() #figsize=(10,10)
-coord_plot=ax.imshow(mean_all_preds, aspect="auto", cmap="inferno", vmax=0.3) #
+#coord_plot=ax.imshow((mean_all_preds == mean_all_preds.max(axis=0, keepdims=1)).astype(float), aspect="auto", cmap="inferno") #, vmax=0.3
+coord_plot=ax.imshow(mean_all_preds, aspect="auto", cmap="inferno") #, vmax=0.3
 ax.set_yticks(list(range(0, n_bins)), index)
 #ax.set_yticks(list(range(0, n_bins-1)), list(range(1, n_bins)))
 ax.set_xticks(list(range(0, n_bins)), index, rotation=90)
